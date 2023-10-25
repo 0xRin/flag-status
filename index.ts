@@ -10,6 +10,17 @@ dotenv.config();
 // define port
 const PORT = process.env.PORT || 3000;
 
+// holds possible flag statuses for string comparison
+enum Status {
+  Half = "HALFSTAFF",
+  Full = "FULLSTAFF",
+}
+
+enum StatusEmojis {
+  Half = "🚨",
+  Full = "🇺🇸",
+}
+
 // get flag status text
 const getFlagStatus = async () => {
   // Launch the browser and open a new blank page
@@ -25,11 +36,22 @@ const getFlagStatus = async () => {
   // format the text
   const flagStatusText = flagStatusTag?.replace(/\s+/g, "").toUpperCase();
 
-  console.log(flagStatusText);
+  return flagStatusText;
 };
 
+const output = "Today's flag is flown at";
+
 try {
-  getFlagStatus();
+  // lets output the status in readable notification
+  getFlagStatus().then((status) => {
+    if (status === Status.Full) {
+      console.log(`${StatusEmojis.Full} ${output} full staff`);
+    } else if (status === Status.Half) {
+      console.log(`${StatusEmojis.Half} ${output} half staff`);
+    } else {
+      throw new Error(`Cannot determine flag status! Got ${status} as status`);
+    }
+  });
 } catch (e: Error | unknown) {
   if (e instanceof Error) console.log(e.message);
 }
