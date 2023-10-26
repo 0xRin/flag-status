@@ -2,6 +2,7 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import puppeteer from "puppeteer";
+import { Twilio } from "twilio";
 
 // initialize express app
 const app: Express = express();
@@ -9,6 +10,33 @@ dotenv.config();
 
 // define port
 const PORT = process.env.PORT || 3000;
+
+// twilio setup
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
+const myNumber = process.env.MY_NUMBER;
+
+const client = new Twilio(accountSid, authToken);
+
+// sends the message w/ given flag status as message
+const createMessage = async (msg: string) => {
+  try {
+    // sends the request to twilio to send the message
+    const res = await client.messages.create({
+      from: twilioNumber,
+      to: myNumber as string,
+      body: `${msg}`,
+    });
+    console.log(`Message ${res.sid} sent!`);
+  } catch (e) {
+    if (e instanceof Error) {
+      console.log(e.message);
+    } else {
+      console.log("Missing one of the variables needed to send message");
+    }
+  }
+};
 
 // holds possible flag statuses for string comparison
 enum Status {
@@ -39,15 +67,16 @@ const getFlagStatus = async () => {
   return flagStatusText;
 };
 
-const output = "Today's flag is flown at";
-
+// main driver that calls scaper and message functions
+// also handles logic for output depending on flag status
 try {
-  // lets output the status in readable notification
+  const output = "Today's flag is flown at";
+
   getFlagStatus().then((status) => {
     if (status === Status.Full) {
-      console.log(`${StatusEmojis.Full} ${output} full staff`);
+      createMessage(`${StatusEmojis.Full} ${output} full staff`);
     } else if (status === Status.Half) {
-      console.log(`${StatusEmojis.Half} ${output} half staff`);
+      createMessage(`${StatusEmojis.Half} ${output} half staff`);
     } else {
       throw new Error(`Cannot determine flag status! Got ${status} as status`);
     }
