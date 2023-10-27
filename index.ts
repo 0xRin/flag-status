@@ -3,6 +3,7 @@ import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import puppeteer from "puppeteer";
 import { Twilio } from "twilio";
+import cron from "node-cron";
 
 // initialize express app
 const app: Express = express();
@@ -69,21 +70,42 @@ const getFlagStatus = async () => {
 
 // main driver that calls scaper and message functions
 // also handles logic for output depending on flag status
-try {
+const run = () => {
   const output = "Today's flag is flown at";
 
-  getFlagStatus().then((status) => {
-    if (status === Status.Full) {
-      createMessage(`${StatusEmojis.Full} ${output} full staff`);
-    } else if (status === Status.Half) {
-      createMessage(`${StatusEmojis.Half} ${output} half staff`);
-    } else {
-      throw new Error(`Cannot determine flag status! Got ${status} as status`);
-    }
-  });
-} catch (e: Error | unknown) {
-  if (e instanceof Error) console.log(e.message);
-}
+  try {
+    getFlagStatus().then((status) => {
+      if (status === Status.Full) {
+        createMessage(`${StatusEmojis.Full} ${output} full staff`);
+      } else if (status === Status.Half) {
+        createMessage(`${StatusEmojis.Half} ${output} half staff`);
+      } else {
+        throw new Error(
+          `Cannot determine flag status! Got ${status} as status`
+        );
+      }
+    });
+  } catch (e: Error | unknown) {
+    if (e instanceof Error) console.log(e.message);
+  }
+};
+
+/* Cron Syntax
+┌────────────── second (optional)
+│ ┌──────────── minute
+│ │ ┌────────── hour
+│ │ │ ┌──────── day of month
+│ │ │ │ ┌────── month
+│ │ │ │ │ ┌──── day of week
+│ │ │ │ │ │
+* * * * * *
+*/
+
+// runs the driver with given schedule
+// every day at 7am
+cron.schedule("0 7 * * *", () => {
+  run();
+});
 
 app.listen(PORT, () => {
   console.log(`😎[server]: Server is running on port ${PORT}`);
