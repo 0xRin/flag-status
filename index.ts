@@ -53,7 +53,11 @@ enum StatusEmojis {
 // get flag status text
 const getFlagStatus = async () => {
   // Launch the browser and open a new blank page
-  const browser = await puppeteer.launch({ headless: "new" });
+  const browser = await puppeteer.launch({
+    headless: "new",
+    args: ["--no-sandbox", "--disabe-setuid-sandbox"],
+    ignoreDefaultArgs: ["--disable-extensions"],
+  });
   const page = await browser.newPage();
 
   // Navigate the page to a URL
@@ -109,4 +113,5 @@ cron.schedule("0 7 * * *", () => {
 
 app.listen(PORT, () => {
   console.log(`😎[server]: Server is running on port ${PORT}`);
+  createMessage("It's working");
 });
